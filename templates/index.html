@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Python Port Scanner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            padding: 20px;
+            margin: 0;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 60px;
+            max-width: 900px;
+            margin: auto;
+        }
+        .left-box, .right-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+            min-height: 400px;
+        }
+        h2, h3 {
+            margin-top: 0;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .open {
+            color: green;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        .port-item {
+            padding: 4px 0;
+        }
+        .common-ports ul {
+            padding-left: 20px;
+        }
+        .open-port {
+            color: green;
+            font-weight: bold;
+        }
+        .search-bar {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Media Query for Tablets and Small Devices */
+        @media (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: 1fr; /* Stack the columns on top of each other */
+                gap: 20px;
+            }
+
+            .left-box, .right-box {
+                min-height: 300px; /* Adjust height for smaller screens */
+                padding: 15px;
+            }
+
+            h2, h3 {
+                font-size: 1.5em; /* Reduce header sizes for smaller screens */
+            }
+
+            input, button {
+                padding: 12px; /* Increase input and button padding for touch devices */
+            }
+
+            .port-item {
+                font-size: 0.9em; /* Adjust font size for smaller screens */
+                display: block; /* Stack the port items */
+                word-wrap: break-word; /* Allow long port names to break into new lines */
+            }
+
+            .common-ports ul {
+                padding-left: 0; /* Remove indentation on mobile */
+                margin: 0; /* Remove margin from list */
+            }
+        }
+
+        /* Media Query for Mobile Devices */
+        @media (max-width: 480px) {
+            .grid-container {
+                grid-template-columns: 1fr; /* Stack the columns */
+                gap: 15px;
+            }
+
+            .left-box, .right-box {
+                min-height: 250px; /* Further adjust height for mobile screens */
+                padding: 10px;
+            }
+
+            h2, h3 {
+                font-size: 1.2em; /* Further reduce header sizes for mobile */
+            }
+
+            input, button {
+                padding: 10px; /* Adjust button and input padding for mobile */
+            }
+
+            .port-item {
+                font-size: 0.8em; /* Adjust font size even smaller for mobile */
+                display: block; /* Stack the port items */
+                word-wrap: break-word; /* Allow long port names to break into new lines */
+            }
+
+            .common-ports ul {
+                padding-left: 0; /* Remove padding on mobile */
+                margin: 0; /* Remove margin from list */
+            }
+
+            .open-port {
+                font-size: 0.9em; /* Adjust font size for the open port label */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-container">
+        <div class="left-box">
+            <h2>Port Scanner</h2>
+            <form method="POST">
+                <input type="text" name="target" placeholder="Enter target IP or domain" required>
+                <input type="number" name="start_port" placeholder="Start Port" required>
+                <input type="number" name="end_port" placeholder="End Port" required>
+                <button type="submit">Scan</button>
+            </form>
+
+            {% if result %}
+                <hr>
+                <h3>Scan Info</h3>
+                <p><strong>Target:</strong> {{ result.target }}</p>
+                <p><strong>Port Range:</strong> {{ result.start_port }} - {{ result.end_port }}</p>
+                <p><strong>Time Taken:</strong> {{ result.duration }}</p>
+
+                <hr>
+                <h3>Open Ports</h3>
+                {% set open_ports = result.port_status | selectattr("is_open") | list %}
+                {% if open_ports %}
+                    <ul>
+                        {% for port in open_ports %}
+                            <li class="port-item open">Port {{ port.number }} is OPEN</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No open ports found.</p>
+                {% endif %}
+            {% else %}
+                <p>No scan yet. Submit the form above.</p>
+            {% endif %}
+        </div>
+        <div class="right-box">
+            <h3>Common Ports</h3>
+            <form method="get">
+                <input class="search-bar" type="number" name="port_search" placeholder="Search Port Number" value="{{ port_search }}">
+            </form>
+
+            <div class="common-ports">
+                <ul>
+                    {% if common_ports %}
+                        {% for port, name in common_ports.items() %}
+                            <li class="port-item">
+                                Port {{ port }} - {{ name }}
+                                {% if port in result.open_ports %}
+                                    <span class="open-port">(OPEN)</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    {% else %}
+                        <p>No matching ports found for port number {{ port_search }}.</p>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
